@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Results — Coaching Hub{% endblock %}
+{% block content %}
+<h1>Results</h1>
+
+<!-- Add result form -->
+<div class="card">
+  <h2>Add Result</h2>
+  <form method="post" action="{{ url_for('add_result') }}">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="athlete_id">Athlete *</label>
+        <select id="athlete_id" name="athlete_id" required>
+          <option value="">— Select athlete —</option>
+          {% for a in athletes %}
+          <option value="{{ a.id }}">{{ a.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="event">Event *</label>
+        <input type="text" id="event" name="event" required placeholder="e.g. Mile, 800m, 5K">
+      </div>
+      <div class="form-group">
+        <label for="mark">Mark *</label>
+        <input type="text" id="mark" name="mark" required placeholder="e.g. 4:32.10">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="meet">Meet</label>
+        <input type="text" id="meet" name="meet" placeholder="e.g. Sectional Invitational">
+      </div>
+      <div class="form-group">
+        <label for="meet_date">Date</label>
+        <input type="date" id="meet_date" name="meet_date">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Result</button>
+  </form>
+</div>
+
+<!-- All results table -->
+<div class="card">
+  <h2>All Results</h2>
+  {% if results %}
+  <table>
+    <thead>
+      <tr><th>Athlete</th><th>Event</th><th>Mark</th><th>Meet</th><th>Date</th><th>Source</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for r in results %}
+      <tr>
+        <td><a href="{{ url_for('athlete_detail', athlete_id=r.athlete_id) }}">{{ r.athlete_name }}</a></td>
+        <td>{{ r.event }}</td>
+        <td><strong>{{ r.mark }}</strong></td>
+        <td>{{ r.meet or '—' }}</td>
+        <td>{{ r.meet_date or '—' }}</td>
+        <td><span class="badge badge-{{ r.source }}">{{ r.source }}</span></td>
+        <td>
+          <form method="post" action="{{ url_for('delete_result', result_id=r.id) }}" style="display:inline" onsubmit="return confirm('Delete this result?')">
+            <button class="btn btn-sm btn-danger">Del</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="attribution">MileSplit-sourced results: data provided by <a href="https://www.milesplit.com" target="_blank">MileSplit (milesplit.com)</a>.</p>
+  {% else %}
+  <p style="color:var(--muted)">No results recorded yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

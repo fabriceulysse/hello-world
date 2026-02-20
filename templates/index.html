@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Coaching Hub{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="stats">
+  <div class="stat">
+    <div class="num">{{ athletes | length }}</div>
+    <div class="label">Active Athletes</div>
+  </div>
+  <div class="stat">
+    <div class="num">{{ practices | length }}</div>
+    <div class="label">Recent Practices</div>
+  </div>
+  <div class="stat">
+    <div class="num">{{ recent_results | length }}</div>
+    <div class="label">Recent Results</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+
+  <!-- Attendance summary -->
+  <div class="card">
+    <h2>Attendance Overview</h2>
+    {% if attendance_summary %}
+    <table>
+      <thead><tr><th>Athlete</th><th>Present</th><th>Total</th><th>Rate</th></tr></thead>
+      <tbody>
+      {% for row in attendance_summary %}
+        {% set rate = (row.present_count / row.total * 100) | int if row.total > 0 else 0 %}
+        <tr>
+          <td><a href="{{ url_for('athlete_detail', athlete_id=row.id) }}">{{ row.name }}</a></td>
+          <td>{{ row.present_count }}</td>
+          <td>{{ row.total }}</td>
+          <td>
+            <span class="progress"><span class="progress-fill" style="width:{{ rate }}%"></span></span>
+            {{ rate }}%
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--muted)">No practices recorded yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Recent practices -->
+  <div class="card">
+    <div class="section-header">
+      <h2>Recent Practices</h2>
+      <a href="{{ url_for('add_practice') }}" class="btn btn-primary btn-sm">+ New</a>
+    </div>
+    {% if practices %}
+    <table>
+      <thead><tr><th>Date</th><th>Title</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for p in practices %}
+        <tr>
+          <td>{{ p.date }}</td>
+          <td><a href="{{ url_for('practice_detail', practice_id=p.id) }}">{{ p.title }}</a></td>
+          <td><a href="{{ url_for('practice_attendance', practice_id=p.id) }}" class="btn btn-sm btn-secondary">Attendance</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--muted)">No practices yet. <a href="{{ url_for('add_practice') }}">Create one.</a></p>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Recent results -->
+<div class="card">
+  <div class="section-header">
+    <h2>Recent Results</h2>
+    <a href="{{ url_for('results') }}" class="btn btn-secondary btn-sm">View all</a>
+  </div>
+  {% if recent_results %}
+  <table>
+    <thead><tr><th>Athlete</th><th>Event</th><th>Mark</th><th>Meet</th><th>Date</th><th>Source</th></tr></thead>
+    <tbody>
+    {% for r in recent_results %}
+      <tr>
+        <td><a href="{{ url_for('athlete_detail', athlete_id=r.athlete_id) }}">{{ r.athlete_name }}</a></td>
+        <td>{{ r.event }}</td>
+        <td><strong>{{ r.mark }}</strong></td>
+        <td>{{ r.meet }}</td>
+        <td>{{ r.meet_date }}</td>
+        <td><span class="badge badge-{{ r.source }}">{{ r.source }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="attribution">MileSplit-sourced results: data provided by <a href="https://www.milesplit.com" target="_blank">MileSplit</a>.</p>
+  {% else %}
+  <p style="color:var(--muted)">No results recorded yet. <a href="{{ url_for('results') }}">Add a result.</a></p>
+  {% endif %}
+</div>
+{% endblock %}

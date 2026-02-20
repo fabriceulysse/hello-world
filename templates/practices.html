@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Practices — Coaching Hub{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h1>Practice Plans</h1>
+  <a href="{{ url_for('add_practice') }}" class="btn btn-primary">+ New Practice</a>
+</div>
+
+{% if practices %}
+<div class="card" style="padding:0;overflow:hidden;">
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Title</th><th>Main Workout</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+    {% for p in practices %}
+      <tr>
+        <td>{{ p.date }}</td>
+        <td><a href="{{ url_for('practice_detail', practice_id=p.id) }}">{{ p.title }}</a></td>
+        <td style="max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.main_workout or '—' }}</td>
+        <td>
+          <a href="{{ url_for('practice_attendance', practice_id=p.id) }}" class="btn btn-sm btn-accent">Attendance</a>
+          <a href="{{ url_for('edit_practice', practice_id=p.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+          <form method="post" action="{{ url_for('delete_practice', practice_id=p.id) }}" style="display:inline" onsubmit="return confirm('Delete this practice?')">
+            <button class="btn btn-sm btn-danger">Del</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card">
+  <p>No practices recorded yet. <a href="{{ url_for('add_practice') }}">Create your first practice plan.</a></p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ athlete.name }} — Coaching Hub{% endblock %}
+{% block content %}
+<div class="section-header">
+  <h1>{{ athlete.name }}</h1>
+  <div class="btn-group" style="margin-top:0">
+    <a href="{{ url_for('edit_athlete', athlete_id=athlete.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+    {% if athlete.milesplit_id %}
+    <form method="post" action="{{ url_for('sync_milesplit', athlete_id=athlete.id) }}" style="display:inline">
+      <button class="btn btn-accent btn-sm">Sync MileSplit</button>
+    </form>
+    <a href="https://www.milesplit.com/athletes/{{ athlete.milesplit_id }}" target="_blank" class="btn btn-secondary btn-sm">View on MileSplit</a>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+  <div class="card">
+    <h3>Info</h3>
+    <table>
+      <tr><td><strong>Grade</strong></td><td>{{ athlete.grade or '—' }}</td></tr>
+      <tr><td><strong>Events</strong></td><td>{{ athlete.events or '—' }}</td></tr>
+      <tr><td><strong>MileSplit</strong></td><td>
+        {% if athlete.milesplit_id %}
+          <a href="https://www.milesplit.com/athletes/{{ athlete.milesplit_id }}" target="_blank">{{ athlete.milesplit_id }}</a>
+        {% else %}
+          Not linked — <a href="{{ url_for('edit_athlete', athlete_id=athlete.id) }}">add ID</a>
+        {% endif %}
+      </td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Personal Records</h3>
+    {% if prs %}
+    <table>
+      <thead><tr><th>Event</th><th>Mark</th><th>Meet</th><th>Date</th></tr></thead>
+      <tbody>
+      {% for pr in prs %}
+        <tr>
+          <td>{{ pr.event }}</td>
+          <td class="pr-mark">{{ pr.mark }}</td>
+          <td>{{ pr.meet or '—' }}</td>
+          <td>{{ pr.meet_date or '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--muted)">No results recorded yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-header">
+    <h2>All Results</h2>
+  </div>
+  {% if results %}
+  <table>
+    <thead><tr><th>Event</th><th>Mark</th><th>Meet</th><th>Date</th><th>Source</th><th></th></tr></thead>
+    <tbody>
+    {% for r in results %}
+      <tr>
+        <td>{{ r.event }}</td>
+        <td><strong>{{ r.mark }}</strong></td>
+        <td>{{ r.meet or '—' }}</td>
+        <td>{{ r.meet_date or '—' }}</td>
+        <td><span class="badge badge-{{ r.source }}">{{ r.source }}</span></td>
+        <td>
+          <form method="post" action="{{ url_for('delete_result', result_id=r.id) }}" style="display:inline" onsubmit="return confirm('Delete this result?')">
+            <button class="btn btn-sm btn-danger">Del</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="attribution">MileSplit-sourced data: <a href="https://www.milesplit.com" target="_blank">milesplit.com</a></p>
+  {% else %}
+  <p style="color:var(--muted)">No results yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

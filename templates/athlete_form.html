@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if athlete else 'Add' }} Athlete — Coaching Hub{% endblock %}
+{% block content %}
+<h1>{{ 'Edit' if athlete else 'Add' }} Athlete</h1>
+
+<div class="card">
+  <form method="post">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Full Name *</label>
+        <input type="text" id="name" name="name" required value="{{ athlete.name if athlete else '' }}">
+      </div>
+      <div class="form-group">
+        <label for="grade">Grade</label>
+        <input type="number" id="grade" name="grade" min="6" max="12" value="{{ athlete.grade if athlete and athlete.grade else '' }}">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="events">Events (e.g. 800m, Mile, 4x400)</label>
+      <input type="text" id="events" name="events" value="{{ athlete.events if athlete else '' }}" placeholder="800m, Mile, 2 Mile">
+    </div>
+
+    <div class="form-group">
+      <label for="milesplit_id">MileSplit Athlete ID</label>
+      <div style="display:flex;gap:0.5rem;align-items:flex-start;">
+        <input type="text" id="milesplit_id" name="milesplit_id"
+               value="{{ athlete.milesplit_id if athlete else '' }}"
+               placeholder="e.g. 123456">
+        <button type="button" class="btn btn-secondary" onclick="searchMileSplit()">Search MileSplit</button>
+      </div>
+      <div id="milesplit-results" style="margin-top:0.5rem;"></div>
+      <p style="font-size:0.8rem;color:var(--muted);margin-top:4px;">
+        Enter the numeric ID from the athlete's MileSplit profile URL:
+        milesplit.com/athletes/<strong>123456</strong>
+      </p>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">{{ 'Save Changes' if athlete else 'Add Athlete' }}</button>
+      <a href="{{ url_for('athletes') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+async function searchMileSplit() {
+  const name = document.getElementById('name').value.trim();
+  if (!name) { alert('Enter an athlete name first.'); return; }
+
+  const resultsDiv = document.getElementById('milesplit-results');
+  resultsDiv.innerHTML = '<em>Searching MileSplit... (may take a few seconds)</em>';
+
+  try {
+    const resp = await fetch('/athletes/search-milesplit?q=' + encodeURIComponent(name));
+    const data = await resp.json();
+
+    if (data.error) {
+      resultsDiv.innerHTML = '<span style="color:red">Error: ' + data.error + '</span>';
+      return;
+    }
+    if (!data.length) {
+      resultsDiv.innerHTML = '<span style="color:var(--muted)">No results found on MileSplit.</span>';
+      return;
+    }
+
+    let html = '<table style="font-size:0.88rem"><thead><tr><th>Name</th><th>ID</th><th></th></tr></thead><tbody>';
+    for (const r of data) {
+      html += `<tr>
+        <td><a href="${r.url}" target="_blank">${r.name}</a></td>
+        <td>${r.id}</td>
+        <td><button type="button" class="btn btn-sm btn-accent" onclick="selectAthlete('${r.id}')">Use this ID</button></td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+    html += '<p class="attribution">Results from <a href="https://www.milesplit.com" target="_blank">MileSplit</a>.</p>';
+    resultsDiv.innerHTML = html;
+  } catch(e) {
+    resultsDiv.innerHTML = '<span style="color:red">Search failed. Check your connection.</span>';
+  }
+}
+
+function selectAthlete(id) {
+  document.getElementById('milesplit_id').value = id;
+  document.getElementById('milesplit-results').innerHTML =
+    '<span style="color:var(--brand)">MileSplit ID set to ' + id + '</span>';
+}
+</script>
+{% endblock %}
