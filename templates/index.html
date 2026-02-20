@@ -3,14 +3,17 @@
 {% block content %}
 <div class="section-header">
   <h1>Dashboard</h1>
-  <a href="{{ url_for('add_athlete') }}" class="btn btn-primary">+ Add Athlete</a>
+  <div style="display:flex;gap:0.5rem;">
+    <a href="{{ url_for('athletes') }}" class="btn btn-secondary">Roster</a>
+    <a href="{{ url_for('add_athlete') }}" class="btn btn-primary">+ Add Athlete</a>
+  </div>
 </div>
 
 <div class="stats">
-  <div class="stat">
+  <a href="{{ url_for('athletes') }}" class="stat" style="text-decoration:none;color:inherit;">
     <div class="num">{{ athletes | length }}</div>
     <div class="label">Active Athletes</div>
-  </div>
+  </a>
   <div class="stat">
     <div class="num">{{ practices | length }}</div>
     <div class="label">Recent Practices</div>
