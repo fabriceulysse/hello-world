@@ -94,6 +94,20 @@ def search_athlete(name):
     return results
 
 
+def athlete_exists(milesplit_id):
+    """
+    Return True if the MileSplit athlete profile page exists (HTTP 200).
+    Used to validate IDs before saving to the database.
+    """
+    url = f"https://www.milesplit.com/athletes/{milesplit_id}"
+    try:
+        time.sleep(DELAY)
+        resp = requests.get(url, headers=HEADERS, timeout=15, allow_redirects=True)
+        return resp.status_code == 200
+    except requests.RequestException:
+        return False
+
+
 def get_athlete_performances(milesplit_id):
     """
     Fetch an athlete's performance history from MileSplit.

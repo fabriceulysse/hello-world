@@ -36,13 +36,24 @@ def athletes():
 @app.route("/athletes/add", methods=["GET", "POST"])
 def add_athlete():
     if request.method == "POST":
+        milesplit_id = request.form.get("milesplit_id", "").strip()
+        name = request.form["name"].strip()
+
+        if not milesplit_id:
+            flash("A MileSplit athlete must be selected before saving.", "error")
+            return render_template("athlete_form.html", athlete=None)
+
+        if not scraper.athlete_exists(milesplit_id):
+            flash(f"Could not verify athlete on MileSplit (ID {milesplit_id}). Please search and select again.", "error")
+            return render_template("athlete_form.html", athlete=None)
+
         models.add_athlete(
-            name=request.form["name"].strip(),
+            name=name,
             grade=request.form.get("grade") or None,
             events=request.form.get("events", "").strip(),
-            milesplit_id=request.form.get("milesplit_id", "").strip(),
+            milesplit_id=milesplit_id,
         )
-        flash(f"Athlete '{request.form['name']}' added.", "success")
+        flash(f"Athlete '{name}' added.", "success")
         return redirect(url_for("athletes"))
     return render_template("athlete_form.html", athlete=None)
 
