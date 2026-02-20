@@ -3,87 +3,150 @@
 {% block content %}
 <h1>{{ 'Edit' if athlete else 'Add' }} Athlete</h1>
 
-<div class="card">
-  <form method="post">
+{% if not athlete %}
+<!-- ── Step 1: Search MileSplit ── -->
+<div class="card" id="search-card">
+  <h2>Search MileSplit</h2>
+  <div class="search-row">
+    <input type="text" id="search-input" placeholder="Athlete name..." autofocus
+           onkeydown="if(event.key==='Enter'){event.preventDefault();doSearch()}">
+    <button class="btn btn-primary" onclick="doSearch()">Search</button>
+  </div>
+  <div id="search-status" style="color:var(--muted);font-size:0.9rem;"></div>
+  <div id="search-results"></div>
+</div>
+
+<!-- ── Step 2: Confirm & save (hidden until a result is selected) ── -->
+<div class="card" id="confirm-card" style="display:none">
+  <h2>Add to Roster</h2>
+  <form method="post" id="add-form">
+    <div style="display:flex;align-items:center;gap:1rem;padding:10px 12px;background:var(--brand-light);border-radius:6px;margin-bottom:1rem;">
+      <div style="flex:1">
+        <strong id="confirm-name" style="font-size:1.05rem;"></strong>
+        <span id="confirm-team" style="color:var(--muted);font-size:0.88rem;margin-left:8px;"></span>
+      </div>
+      <a id="confirm-link" href="#" target="_blank" class="btn btn-sm btn-secondary">View on MileSplit</a>
+      <button type="button" class="btn btn-sm btn-secondary" onclick="resetSearch()">Change</button>
+    </div>
+
+    <input type="hidden" id="name" name="name">
+    <input type="hidden" id="milesplit_id" name="milesplit_id">
+
     <div class="form-row">
       <div class="form-group">
-        <label for="name">Full Name *</label>
-        <input type="text" id="name" name="name" required value="{{ athlete.name if athlete else '' }}">
+        <label for="grade">Grade</label>
+        <input type="number" id="grade" name="grade" min="6" max="12" placeholder="e.g. 11">
       </div>
       <div class="form-group">
-        <label for="grade">Grade</label>
-        <input type="number" id="grade" name="grade" min="6" max="12" value="{{ athlete.grade if athlete and athlete.grade else '' }}">
+        <label for="events">Events</label>
+        <input type="text" id="events" name="events" placeholder="e.g. 800m, Mile, 2 Mile">
       </div>
-    </div>
-
-    <div class="form-group">
-      <label for="events">Events (e.g. 800m, Mile, 4x400)</label>
-      <input type="text" id="events" name="events" value="{{ athlete.events if athlete else '' }}" placeholder="800m, Mile, 2 Mile">
-    </div>
-
-    <div class="form-group">
-      <label for="milesplit_id">MileSplit Athlete ID</label>
-      <div style="display:flex;gap:0.5rem;align-items:flex-start;">
-        <input type="text" id="milesplit_id" name="milesplit_id"
-               value="{{ athlete.milesplit_id if athlete else '' }}"
-               placeholder="e.g. 123456">
-        <button type="button" class="btn btn-secondary" onclick="searchMileSplit()">Search MileSplit</button>
-      </div>
-      <div id="milesplit-results" style="margin-top:0.5rem;"></div>
-      <p style="font-size:0.8rem;color:var(--muted);margin-top:4px;">
-        Enter the numeric ID from the athlete's MileSplit profile URL:
-        milesplit.com/athletes/<strong>123456</strong>
-      </p>
     </div>
 
     <div class="btn-group">
-      <button type="submit" class="btn btn-primary">{{ 'Save Changes' if athlete else 'Add Athlete' }}</button>
+      <button type="submit" class="btn btn-primary">Add to Roster</button>
       <a href="{{ url_for('athletes') }}" class="btn btn-secondary">Cancel</a>
     </div>
   </form>
 </div>
 
-<script>
-async function searchMileSplit() {
-  const name = document.getElementById('name').value.trim();
-  if (!name) { alert('Enter an athlete name first.'); return; }
+{% else %}
+<!-- Edit mode: plain form, no MileSplit search needed -->
+<div class="card">
+  <form method="post">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Full Name *</label>
+        <input type="text" id="name" name="name" required value="{{ athlete.name }}">
+      </div>
+      <div class="form-group">
+        <label for="grade">Grade</label>
+        <input type="number" id="grade" name="grade" min="6" max="12" value="{{ athlete.grade or '' }}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="events">Events</label>
+      <input type="text" id="events" name="events" value="{{ athlete.events or '' }}" placeholder="800m, Mile, 2 Mile">
+    </div>
+    <div class="form-group">
+      <label for="milesplit_id">MileSplit ID</label>
+      <input type="text" id="milesplit_id" name="milesplit_id" value="{{ athlete.milesplit_id or '' }}" placeholder="e.g. 123456">
+      <p style="font-size:0.8rem;color:var(--muted);margin-top:4px;">milesplit.com/athletes/<strong>123456</strong></p>
+    </div>
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="{{ url_for('athlete_detail', athlete_id=athlete.id) }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endif %}
 
-  const resultsDiv = document.getElementById('milesplit-results');
-  resultsDiv.innerHTML = '<em>Searching MileSplit... (may take a few seconds)</em>';
+{% if not athlete %}
+<script>
+async function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+
+  const status = document.getElementById('search-status');
+  const resultsDiv = document.getElementById('search-results');
+  status.textContent = 'Searching MileSplit…';
+  resultsDiv.innerHTML = '';
 
   try {
-    const resp = await fetch('/athletes/search-milesplit?q=' + encodeURIComponent(name));
+    const resp = await fetch('/athletes/search-milesplit?q=' + encodeURIComponent(q));
     const data = await resp.json();
+    status.textContent = '';
 
     if (data.error) {
-      resultsDiv.innerHTML = '<span style="color:red">Error: ' + data.error + '</span>';
+      status.innerHTML = '<span style="color:var(--danger)">Error: ' + data.error + '</span>';
       return;
     }
     if (!data.length) {
-      resultsDiv.innerHTML = '<span style="color:var(--muted)">No results found on MileSplit.</span>';
+      status.textContent = 'No results found on MileSplit.';
       return;
     }
 
-    let html = '<table style="font-size:0.88rem"><thead><tr><th>Name</th><th>ID</th><th></th></tr></thead><tbody>';
+    let html = '<table style="margin-top:0.75rem"><thead><tr><th>Name</th><th>Team</th><th></th></tr></thead><tbody>';
     for (const r of data) {
+      const team = r.team || '';
+      // Safely encode data for onclick attribute
+      const safeId   = r.id.replace(/'/g, '');
+      const safeName = r.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const safeTeam = team.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const safeUrl  = r.url.replace(/'/g, '');
       html += `<tr>
         <td><a href="${r.url}" target="_blank">${r.name}</a></td>
-        <td>${r.id}</td>
-        <td><button type="button" class="btn btn-sm btn-accent" onclick="selectAthlete('${r.id}')">Use this ID</button></td>
+        <td style="color:var(--muted)">${team}</td>
+        <td><button type="button" class="btn btn-sm btn-primary"
+              onclick="selectAthlete('${safeId}','${safeName}','${safeTeam}','${safeUrl}')">
+            Add
+          </button></td>
       </tr>`;
     }
     html += '</tbody></table>';
-    html += '<p class="attribution">Results from <a href="https://www.milesplit.com" target="_blank">MileSplit</a>.</p>';
+    html += '<p class="attribution" style="margin-top:0.5rem">Data from <a href="https://www.milesplit.com" target="_blank">MileSplit</a>.</p>';
     resultsDiv.innerHTML = html;
   } catch(e) {
-    resultsDiv.innerHTML = '<span style="color:red">Search failed. Check your connection.</span>';
+    status.innerHTML = '<span style="color:var(--danger)">Search failed. Check connection.</span>';
   }
 }
 
-function selectAthlete(id) {
+function selectAthlete(id, name, team, url) {
+  document.getElementById('name').value = name;
   document.getElementById('milesplit_id').value = id;
-  document.getElementById('milesplit-results').innerHTML =
-    '<span style="color:var(--brand)">MileSplit ID set to ' + id + '</span>';
+  document.getElementById('confirm-name').textContent = name;
+  document.getElementById('confirm-team').textContent = team;
+  document.getElementById('confirm-link').href = url;
+  document.getElementById('search-card').style.display = 'none';
+  document.getElementById('confirm-card').style.display = '';
+  document.getElementById('grade').focus();
+}
+
+function resetSearch() {
+  document.getElementById('confirm-card').style.display = 'none';
+  document.getElementById('search-card').style.display = '';
+  document.getElementById('search-input').focus();
 }
 </script>
+{% endif %}
 {% endblock %}

@@ -30,32 +30,67 @@ def _get(url):
 def search_athlete(name):
     """
     Search MileSplit for an athlete by name.
-    Returns a list of dicts: [{id, name, team, state, url}, ...]
+    Returns a list of dicts: [{id, name, team, url}, ...]
     """
     url = f"https://www.milesplit.com/search/?q={requests.utils.quote(name)}&type=athletes"
     html = _get(url)
     soup = BeautifulSoup(html, "lxml")
 
     results = []
-    # MileSplit search results are in anchor tags with /athletes/ in the href
-    for a in soup.select("a[href*='/athletes/']"):
-        href = a.get("href", "")
-        # Extract numeric athlete id
-        match = re.search(r"/athletes/(\d+)", href)
+    seen_ids = set()
+
+    # MileSplit search results are typically list items or divs containing
+    # an athlete link plus a secondary team/school link.
+    # We walk each result container to extract both.
+    for container in soup.select("li, div.result, div.search-result, article"):
+        a_tag = container.find("a", href=re.compile(r"/athletes/\d+"))
+        if not a_tag:
+            continue
+        match = re.search(r"/athletes/(\d+)", a_tag["href"])
         if not match:
             continue
         athlete_id = match.group(1)
-        text = a.get_text(separator=" ", strip=True)
-        if not text:
+        if athlete_id in seen_ids:
             continue
-        # Avoid duplicate ids
-        if any(r["id"] == athlete_id for r in results):
+        seen_ids.add(athlete_id)
+
+        athlete_name = a_tag.get_text(separator=" ", strip=True)
+        if not athlete_name:
             continue
+
+        # Try to find a team/school link in the same container
+        team = ""
+        team_tag = container.find("a", href=re.compile(r"/teams/|/schools/"))
+        if team_tag:
+            team = team_tag.get_text(strip=True)
+
         results.append({
             "id": athlete_id,
-            "name": text,
+            "name": athlete_name,
+            "team": team,
             "url": f"https://www.milesplit.com/athletes/{athlete_id}",
         })
+
+    # Fallback: if the container-based search found nothing, scan all athlete links
+    if not results:
+        for a_tag in soup.select("a[href*='/athletes/']"):
+            match = re.search(r"/athletes/(\d+)", a_tag["href"])
+            if not match:
+                continue
+            athlete_id = match.group(1)
+            if athlete_id in seen_ids:
+                continue
+            seen_ids.add(athlete_id)
+            text = a_tag.get_text(separator=" ", strip=True)
+            if not text:
+                continue
+            results.append({
+                "id": athlete_id,
+                "name": text,
+                "team": "",
+                "url": f"https://www.milesplit.com/athletes/{athlete_id}",
+            })
+
     return results
 
 
