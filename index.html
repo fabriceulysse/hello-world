@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Coach Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sport-label">Track &amp; Field</div>
+      <h1>Coach Hub</h1>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-page="dashboard">
+        <span class="icon">&#128202;</span> Dashboard
+      </button>
+      <button class="nav-item" data-page="roster">
+        <span class="icon">&#128101;</span> Roster
+      </button>
+      <button class="nav-item" data-page="attendance">
+        <span class="icon">&#9989;</span> Attendance
+      </button>
+      <button class="nav-item" data-page="plans">
+        <span class="icon">&#128203;</span> Practice Plans
+      </button>
+      <button class="nav-item" data-page="results">
+        <span class="icon">&#127942;</span> Results
+      </button>
+      <button class="nav-item" data-page="goals">
+        <span class="icon">&#127919;</span> Goals
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section id="page-dashboard" class="page">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <span id="today-date" class="text-muted text-sm"></span>
+      </div>
+      <div class="page-content">
+        <div class="grid-4 mb-2" id="dashboard-stats"></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Recent Results</span></div>
+            <div id="recent-results"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Active Goals</span></div>
+            <div id="active-goals-dash"></div>
+          </div>
+        </div>
+        <div class="card mt-2">
+          <div class="card-header"><span class="card-title">Recent Attendance</span></div>
+          <div id="recent-attendance-dash"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROSTER -->
+    <section id="page-roster" class="page hidden">
+      <div class="page-header">
+        <h2>Roster</h2>
+        <button class="btn btn-primary" onclick="App.openAddAthlete()">+ Add Athlete</button>
+      </div>
+      <div class="page-content">
+        <div class="search-bar">
+          <input class="search-input" type="text" id="roster-search" placeholder="Search athletes..." oninput="App.renderRoster()">
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Grade</th>
+                  <th>Events</th>
+                  <th>PRs</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="roster-tbody"></tbody>
+            </table>
+          </div>
+          <div id="roster-empty" class="empty-state hidden">
+            <div class="icon">&#128101;</div>
+            <p>No athletes yet. Add your first athlete to get started.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ATTENDANCE -->
+    <section id="page-attendance" class="page hidden">
+      <div class="page-header">
+        <h2>Attendance</h2>
+        <button class="btn btn-primary" onclick="App.openTakeAttendance()">+ Take Attendance</button>
+      </div>
+      <div class="page-content">
+        <div class="page-tabs">
+          <button class="page-tab active" onclick="App.switchAttTab('history')">History</button>
+          <button class="page-tab" onclick="App.switchAttTab('summary')">Athlete Summary</button>
+        </div>
+        <div id="att-tab-history">
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Name / Focus</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>Excused</th>
+                    <th>Injured</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="att-tbody"></tbody>
+              </table>
+            </div>
+            <div id="att-empty" class="empty-state hidden">
+              <div class="icon">&#9989;</div>
+              <p>No attendance records yet.</p>
+            </div>
+          </div>
+        </div>
+        <div id="att-tab-summary" class="hidden">
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Athlete</th>
+                    <th>Sessions</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>Excused</th>
+                    <th>Injured</th>
+                    <th>Rate</th>
+                  </tr>
+                </thead>
+                <tbody id="att-summary-tbody"></tbody>
+              </table>
+            </div>
+            <div id="att-summary-empty" class="empty-state hidden">
+              <p>No data yet.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRACTICE PLANS -->
+    <section id="page-plans" class="page hidden">
+      <div class="page-header">
+        <h2>Practice Plans</h2>
+        <button class="btn btn-primary" onclick="App.openCreatePlan()">+ New Plan</button>
+      </div>
+      <div class="page-content">
+        <div id="plans-list"></div>
+        <div id="plans-empty" class="empty-state hidden">
+          <div class="icon">&#128203;</div>
+          <p>No practice plans yet. Create your first plan.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="page-results" class="page hidden">
+      <div class="page-header">
+        <h2>Performance Results</h2>
+        <button class="btn btn-primary" onclick="App.openLogResult()">+ Log Result</button>
+      </div>
+      <div class="page-content">
+        <div class="page-tabs">
+          <button class="page-tab active" onclick="App.switchResultTab('all')">All Results</button>
+          <button class="page-tab" onclick="App.switchResultTab('prs')">Personal Records</button>
+          <button class="page-tab" onclick="App.switchResultTab('meets')">Meet Results</button>
+        </div>
+        <div class="search-bar">
+          <select class="search-input" id="results-athlete-filter" onchange="App.renderResults()" style="flex:0 0 auto;width:190px;">
+            <option value="">All Athletes</option>
+          </select>
+          <select class="search-input" id="results-event-filter" onchange="App.renderResults()" style="flex:0 0 auto;width:170px;">
+            <option value="">All Events</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Athlete</th>
+                  <th>Event</th>
+                  <th>Mark</th>
+                  <th>Type</th>
+                  <th>Meet / Place</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="results-tbody"></tbody>
+            </table>
+          </div>
+          <div id="results-empty" class="empty-state hidden">
+            <div class="icon">&#127942;</div>
+            <p>No results logged yet.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GOALS -->
+    <section id="page-goals" class="page hidden">
+      <div class="page-header">
+        <h2>Goals</h2>
+        <button class="btn btn-primary" onclick="App.openAddGoal()">+ Set Goal</button>
+      </div>
+      <div class="page-content">
+        <div class="page-tabs">
+          <button class="page-tab active" onclick="App.switchGoalTab('active')">Active</button>
+          <button class="page-tab" onclick="App.switchGoalTab('achieved')">Achieved</button>
+        </div>
+        <div id="goals-list"></div>
+        <div id="goals-empty" class="empty-state hidden">
+          <div class="icon">&#127919;</div>
+          <p>No goals set yet.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== MODALS ===== -->
+
+  <!-- Add / Edit Athlete -->
+  <div id="modal-athlete" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="athlete-modal-title">Add Athlete</span>
+        <button class="modal-close" onclick="App.closeModal('modal-athlete')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="athlete-id">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input class="form-control" type="text" id="athlete-name" placeholder="e.g. Alex Johnson">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Grade</label>
+          <select class="form-control" id="athlete-grade">
+            <option value="">-- Select --</option>
+            <option>9th</option><option>10th</option><option>11th</option><option>12th</option>
+            <option>Freshman</option><option>Sophomore</option><option>Junior</option><option>Senior</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Events</label>
+          <div class="event-grid" id="athlete-events-grid"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-control" id="athlete-notes" placeholder="Strengths, injury history, anything relevant..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="App.closeModal('modal-athlete')">Cancel</button>
+        <button class="btn btn-primary" onclick="App.saveAthlete()">Save Athlete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Take Attendance -->
+  <div id="modal-attendance" class="modal-overlay hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <span class="modal-title">Take Attendance</span>
+        <button class="modal-close" onclick="App.closeModal('modal-attendance')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Date *</label>
+            <input class="form-control" type="date" id="att-date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Session Type *</label>
+            <select class="form-control" id="att-type" onchange="App.toggleAttMeetField()">
+              <option value="practice">Practice</option>
+              <option value="meet">Meet</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" id="att-meet-name-group" style="display:none;">
+          <label class="form-label">Meet Name</label>
+          <input class="form-control" type="text" id="att-meet-name" placeholder="e.g. Regional Championship">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Focus / Notes</label>
+          <input class="form-control" type="text" id="att-focus" placeholder="e.g. Speed work, relay exchanges...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Athletes</label>
+          <div class="attendance-list" id="att-athlete-list"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="App.closeModal('modal-attendance')">Cancel</button>
+        <button class="btn btn-primary" onclick="App.saveAttendance()">Save Attendance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create / Edit Practice Plan -->
+  <div id="modal-plan" class="modal-overlay hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <span class="modal-title" id="plan-modal-title">Create Practice Plan</span>
+        <button class="modal-close" onclick="App.closeModal('modal-plan')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="plan-id">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Date *</label>
+            <input class="form-control" type="date" id="plan-date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Title *</label>
+            <input class="form-control" type="text" id="plan-title" placeholder="e.g. Speed Day, Tempo Tuesday">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Focus / Theme</label>
+          <input class="form-control" type="text" id="plan-focus" placeholder="e.g. Acceleration, Endurance, Technique">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Warm-Up</label>
+          <textarea class="form-control" id="plan-warmup" placeholder="e.g. 10 min easy jog, A/B skips, leg swings..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Main Workout</label>
+          <div id="plan-drills-list"></div>
+          <div class="drill-add-row">
+            <input class="form-control" type="text" id="plan-drill-input" placeholder="Add drill or activity...">
+            <input class="form-control" type="text" id="plan-drill-duration" placeholder="Duration / sets" style="max-width:150px;">
+            <button class="btn btn-outline btn-sm" onclick="App.addDrill()">+ Add</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cool-Down</label>
+          <textarea class="form-control" id="plan-cooldown" placeholder="e.g. 10 min easy jog, static stretches..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Coach Notes</label>
+          <textarea class="form-control" id="plan-notes" placeholder="Observations, goals for the day, reminders..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="App.closeModal('modal-plan')">Cancel</button>
+        <button class="btn btn-primary" onclick="App.savePlan()">Save Plan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Practice Plan -->
+  <div id="modal-view-plan" class="modal-overlay hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <span class="modal-title" id="view-plan-title"></span>
+        <button class="modal-close" onclick="App.closeModal('modal-view-plan')">&#10005;</button>
+      </div>
+      <div class="modal-body" id="view-plan-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="App.closeModal('modal-view-plan')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Result -->
+  <div id="modal-result" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Log Performance Result</span>
+        <button class="modal-close" onclick="App.closeModal('modal-result')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="result-id">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Date *</label>
+            <input class="form-control" type="date" id="result-date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Athlete *</label>
+            <select class="form-control" id="result-athlete" onchange="App.updateResultEvents()">
+              <option value="">-- Select Athlete --</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Event *</label>
+            <select class="form-control" id="result-event">
+              <option value="">-- Select Event --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mark *</label>
+            <input class="form-control" type="text" id="result-value" placeholder="e.g. 10.45, 6.23m, 4:32.1">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-control" id="result-type" onchange="App.toggleResultMeetFields()">
+              <option value="practice">Practice</option>
+              <option value="meet">Meet</option>
+            </select>
+          </div>
+          <div class="form-group" id="result-place-group" style="display:none;">
+            <label class="form-label">Place</label>
+            <input class="form-control" type="number" id="result-place" min="1" placeholder="e.g. 1">
+          </div>
+        </div>
+        <div class="form-group" id="result-meet-group" style="display:none;">
+          <label class="form-label">Meet Name</label>
+          <input class="form-control" type="text" id="result-meet" placeholder="e.g. Regional Championship">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-control" id="result-notes" placeholder="Wind reading, conditions, reaction time, observations..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="App.closeModal('modal-result')">Cancel</button>
+        <button class="btn btn-primary" onclick="App.saveResult()">Save Result</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Set / Edit Goal -->
+  <div id="modal-goal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="goal-modal-title">Set Goal</span>
+        <button class="modal-close" onclick="App.closeModal('modal-goal')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="goal-id">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Athlete *</label>
+            <select class="form-control" id="goal-athlete" onchange="App.updateGoalEvents()">
+              <option value="">-- Select Athlete --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Event *</label>
+            <select class="form-control" id="goal-event">
+              <option value="">-- Select Event --</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Target Mark *</label>
+            <input class="form-control" type="text" id="goal-target" placeholder="e.g. sub 11.0, 6.50m">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Date</label>
+            <input class="form-control" type="date" id="goal-deadline">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-control" id="goal-notes" placeholder="Training focus, steps to reach this goal..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="App.closeModal('modal-goal')">Cancel</button>
+        <button class="btn btn-primary" onclick="App.saveGoal()">Save Goal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Athlete -->
+  <div id="modal-view-athlete" class="modal-overlay hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <span class="modal-title" id="view-athlete-name"></span>
+        <button class="modal-close" onclick="App.closeModal('modal-view-athlete')">&#10005;</button>
+      </div>
+      <div class="modal-body" id="view-athlete-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="App.closeModal('modal-view-athlete')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Attendance Session -->
+  <div id="modal-view-attendance" class="modal-overlay hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <span class="modal-title" id="view-att-title"></span>
+        <button class="modal-close" onclick="App.closeModal('modal-view-attendance')">&#10005;</button>
+      </div>
+      <div class="modal-body" id="view-att-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="App.closeModal('modal-view-attendance')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
